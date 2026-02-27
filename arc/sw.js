@@ -7,21 +7,21 @@
    form submissions or dynamic data.
    ============================================= */
 
-var CACHE_NAME = 'qb7-v122';
+var CACHE_NAME = 'qb7-v123';
 
 // Only cache files that never change (or change rarely).
 // epa.js is NOT cached — it changes on every new post.
 // msg_up.cgi and pic_up.php are NOT cached — they are server endpoints.
 var STATIC_ASSETS = [
-    '/arc/index.htm',
-    '/arc/style.css',
-    '/arc/radar.gif',
-    '/arc/FacePics/Joe_M.JPG',
-    '/arc/FacePics/Alys_FCC.JPG',
-    '/arc/FacePics/J_FM.JPG',
-    '/arc/FacePics/Viv.JPG',
-    '/arc/FacePics/Colin.jpg',
-    '/MBG.jpg'
+    'index.htm',
+    'style.css',
+    'radar.gif',
+    'FacePics/Joe_M.JPG',
+    'FacePics/Alys_FCC.JPG',
+    'FacePics/J_FM.JPG',
+    'FacePics/Viv.JPG',
+    'FacePics/Colin.jpg',
+    '../MBG.jpg'
 ];
 
 // Install: pre-cache the static shell

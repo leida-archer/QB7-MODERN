@@ -2,7 +2,7 @@
     "name": "QB7 Family Page",
     "short_name": "QB7",
     "description": "Private family posting board",
-    "start_url": "/arc/index.htm",
+    "start_url": "index.htm",
     "display": "standalone",
     "orientation": "any",
     "background_color": "#f0f2f5",

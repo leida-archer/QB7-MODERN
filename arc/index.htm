@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 
 <title>Copy of Family Page</title>
-<link rel="stylesheet" href="style.css?v=122">
+<link rel="stylesheet" href="style.css?v=123">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#1a0a3e">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -310,7 +310,7 @@ function Lod() {$finam=''}
             <button class="menu-btn" onclick="toggleSidebar()">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
             </button>
-            <a class="site-logo" href="/arc/index.htm" onclick="event.preventDefault();switchTab('home')">QB7</a>
+            <a class="site-logo" href="index.htm" onclick="event.preventDefault();switchTab('home')">QB7</a>
             <input class="search-box" type="text" placeholder="Search posts..." disabled>
         </div>
         <div class="header-tabs">
@@ -3268,8 +3268,24 @@ function ftEnsureSeeded() {
     for(var i = 0; i < _members.length; i++) {
         people.push({id: 'p_' + i, name: _members[i].n, member: true});
     }
+    // Add parent placeholders for Joe & Jay
+    people.push({id: 'p_dad', name: 'Dad', member: false});
+    people.push({id: 'p_mom', name: 'Mom', member: false});
     ftSavePeople(people);
-    ftSaveRels([]);
+    // Seed known family relationships
+    // _members index: 0=Alyson, 5=Colin, 20=Jay, 22=Joe, 31=Vivian
+    var rels = [
+        {id:'r_seed_1', type:'partnered_with', a:'p_20', b:'p_0'},   // Jay & Alyson
+        {id:'r_seed_2', type:'parent_of', a:'p_20', b:'p_31'},       // Jay → Vivian
+        {id:'r_seed_3', type:'parent_of', a:'p_0',  b:'p_31'},       // Alyson → Vivian
+        {id:'r_seed_4', type:'parent_of', a:'p_20', b:'p_5'},        // Jay → Colin
+        {id:'r_seed_5', type:'parent_of', a:'p_0',  b:'p_5'},        // Alyson → Colin
+        {id:'r_seed_6', type:'parent_of', a:'p_dad', b:'p_22'},      // Dad → Joe
+        {id:'r_seed_7', type:'parent_of', a:'p_mom', b:'p_22'},      // Mom → Joe
+        {id:'r_seed_8', type:'parent_of', a:'p_dad', b:'p_20'},      // Dad → Jay
+        {id:'r_seed_9', type:'parent_of', a:'p_mom', b:'p_20'}       // Mom → Jay (makes Joe & Jay siblings)
+    ];
+    ftSaveRels(rels);
 }
 
 // --- Query Functions ---
