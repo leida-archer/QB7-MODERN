@@ -1380,7 +1380,10 @@ a:hover { text-decoration: underline; }
     fill: #c084fc;
 }
 .ft-readonly-tree .ft-tree-svg path {
-    stroke: rgba(192,132,252,0.4) !important;
+    stroke: rgba(192,132,252,0.55) !important;
+}
+.ft-readonly-tree .ft-tree-svg line {
+    stroke: rgba(192,132,252,0.55) !important;
 }
 .ft-readonly-tree .ft-tree-avatar {
     background: rgba(255,255,255,0.15);

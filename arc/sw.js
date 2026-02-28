@@ -7,7 +7,7 @@
    form submissions or dynamic data.
    ============================================= */
 
-var CACHE_NAME = 'qb7-v123';
+var CACHE_NAME = 'qb7-v124';
 
 // Only cache files that never change (or change rarely).
 // epa.js is NOT cached — it changes on every new post.
