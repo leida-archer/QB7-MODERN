@@ -4187,7 +4187,8 @@ function ftAbsTreeNode(person, x, y, isMe, profileNav) {
 }
 
 // Render the full tree into a container
-function ftRenderAbsoluteTree(container, layout, profileNav) {
+function ftRenderAbsoluteTree(container, layout, profileNav, highlightId) {
+    var hlId = highlightId || layout.egoId;
     var html = '<div class="ft-tree-label">Family Tree <i style="font-weight:400;opacity:0.5;text-transform:none">(Drag)</i></div>';
     html += '<div class="ft-tree-viewport">';
     html += '<div class="ft-tree-canvas" style="position:relative;width:'+layout.totalW+'px;height:'+layout.totalH+'px">';
@@ -4199,14 +4200,14 @@ function ftRenderAbsoluteTree(container, layout, profileNav) {
         var person = ftGetPerson(pid);
         if(!person) continue;
         var co = layout.coords[pid];
-        html += ftAbsTreeNode(person, co.x, co.y, pid === layout.egoId, profileNav);
+        html += ftAbsTreeNode(person, co.x, co.y, pid === hlId, profileNav);
     }
     html += '</div></div>';
     container.innerHTML = html;
 
-    // Center viewport on ego
+    // Center viewport on highlighted user (or ego if no highlight)
     var vp = container.querySelector('.ft-tree-viewport');
-    var egoC = layout.coords[layout.egoId];
+    var egoC = layout.coords[hlId] || layout.coords[layout.egoId];
     if(vp && egoC) {
         vp.scrollLeft = egoC.x - vp.clientWidth / 2;
         vp.scrollTop = Math.max(0, egoC.y - vp.clientHeight / 3);
@@ -4253,13 +4254,13 @@ function ftRenderAbsoluteTree(container, layout, profileNav) {
 }
 
 // Main entry point — replaces the old tier-based renderer
-function ftRenderMiniTree(personId, containerEl, profileNav) {
+function ftRenderMiniTree(personId, containerEl, profileNav, highlightId) {
     var container = containerEl || document.getElementById('ft-tree-container');
     if(!container) return;
     if(!ftGetPerson(personId)) return;
     var layout = ftCalcTreeLayout(personId);
     if(!layout) return;
-    ftRenderAbsoluteTree(container, layout, profileNav);
+    ftRenderAbsoluteTree(container, layout, profileNav, highlightId);
 }
 
 // Resize handler — no-op for SVG (pre-calculated coordinates)
@@ -4270,14 +4271,16 @@ function ftRenderReadOnlyTree() {
     var el = document.getElementById('ft-readonly');
     if(!el) return;
     var loggedUser = (sessionStorage.getItem('qb7_user') || '').toLowerCase();
-    var person = ftGetPersonByName(loggedUser);
-    if(!person) {
+    var me = ftGetPersonByName(loggedUser);
+    // Always build tree from Joe (p_22) for consistent layout
+    var root = ftGetPersonByName('joe') || me;
+    if(!root) {
         el.innerHTML = '<div class="ft-empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="22" x2="12" y2="13"/><path d="M12 13L7 8"/><path d="M12 13l5-5"/><line x1="12" y1="13" x2="12" y2="6"/><path d="M12 6L9 3"/><path d="M12 6l3-3"/></svg><span>No family tree data yet</span></div>';
         return;
     }
     el.innerHTML = '<div class="ft-tree" id="ft-readonly-tree-container"></div>';
     var treeContainer = document.getElementById('ft-readonly-tree-container');
-    ftRenderMiniTree(person.id, treeContainer, true);
+    ftRenderMiniTree(root.id, treeContainer, true, me ? me.id : null);
 }
 
 // --- Wizards ---
