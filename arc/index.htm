@@ -3683,7 +3683,13 @@ function ftRenderEditor(personId) {
     html += '</div>';
 
     document.getElementById('ft-editor').innerHTML = html;
-    ftRenderMiniTree(personId);
+    // Render direct-family-only tree (grandparents, parents, siblings, children, grandchildren)
+    var directSet = ftGetDirectFamilySet(personId);
+    var treeContainer = document.getElementById('ft-tree-container');
+    if(treeContainer) {
+        var layout = ftCalcTreeLayout(personId, directSet);
+        if(layout) ftRenderAbsoluteTree(treeContainer, layout);
+    }
 }
 
 // Find the relationship ID for a given pair
@@ -3707,6 +3713,58 @@ function ftRemoveRelAndRefresh(relId) {
     if(_ftSelectedId) ftRenderEditor(_ftSelectedId);
 }
 
+// --- Direct Family Set (for editor mini-tree filtering) ---
+// Returns only: grandparents, parents, ego, siblings, children, grandchildren
+// + partners of all above. No extended family (uncles, cousins, nieces, etc.)
+function ftGetDirectFamilySet(personId) {
+    var allowed = {};
+    allowed[personId] = true;
+    var i, j, k;
+    // Ego's partners
+    var pts = ftGetPartners(personId);
+    for(i=0; i<pts.length; i++) allowed[pts[i].id] = true;
+    // Parents + their partners
+    var parents = ftGetParents(personId);
+    for(i=0; i<parents.length; i++) {
+        allowed[parents[i].id] = true;
+        var pp = ftGetPartners(parents[i].id);
+        for(j=0; j<pp.length; j++) allowed[pp[j].id] = true;
+    }
+    // Siblings + their partners
+    var sibs = ftGetSiblings(personId);
+    for(i=0; i<sibs.length; i++) {
+        allowed[sibs[i].id] = true;
+        var sp = ftGetPartners(sibs[i].id);
+        for(j=0; j<sp.length; j++) allowed[sp[j].id] = true;
+    }
+    // Children + their partners
+    var children = ftGetChildren(personId);
+    for(i=0; i<children.length; i++) {
+        allowed[children[i].id] = true;
+        var cp = ftGetPartners(children[i].id);
+        for(j=0; j<cp.length; j++) allowed[cp[j].id] = true;
+    }
+    // Grandparents + their partners
+    for(i=0; i<parents.length; i++) {
+        var gp = ftGetParents(parents[i].id);
+        for(j=0; j<gp.length; j++) {
+            allowed[gp[j].id] = true;
+            var gpp = ftGetPartners(gp[j].id);
+            for(k=0; k<gpp.length; k++) allowed[gpp[k].id] = true;
+        }
+    }
+    // Grandchildren + their partners
+    for(i=0; i<children.length; i++) {
+        var gc = ftGetChildren(children[i].id);
+        for(j=0; j<gc.length; j++) {
+            allowed[gc[j].id] = true;
+            var gcp = ftGetPartners(gc[j].id);
+            for(k=0; k<gcp.length; k++) allowed[gcp[k].id] = true;
+        }
+    }
+    return allowed;
+}
+
 // --- UI: Coordinate-Based Family Tree Layout ---
 // Pre-calculates (x,y) for every node, renders with position:absolute.
 // No flexbox tiers — no overlap, no crossing lines.
@@ -3723,7 +3781,7 @@ function _ftCoupleW(personId, partnerMap) {
 // Build cluster tree using BFS from ego.
 // Discovers ALL connected people at any depth, assigns generations,
 // then builds a recursive descent tree from the oldest ancestor.
-function ftBuildClusters(egoId) {
+function ftBuildClusters(egoId, allowedSet) {
     var rendered = {};
     var genMap = {};
 
@@ -3744,7 +3802,7 @@ function ftBuildClusters(egoId) {
         var _s = ftGetSiblings(pid);
         for(var i=0;i<_s.length;i++) nbrs.push({id:_s[i].id, gen:gen});
         for(var i=0;i<nbrs.length;i++) {
-            if(!rendered[nbrs[i].id]) {
+            if(!rendered[nbrs[i].id] && (!allowedSet || allowedSet[nbrs[i].id])) {
                 rendered[nbrs[i].id] = true;
                 genMap[nbrs[i].id] = nbrs[i].gen;
                 bfsQ.push(nbrs[i]);
@@ -3884,13 +3942,16 @@ function ftBuildClusters(egoId) {
     }
 
     // --- Phase 6: Add truly disconnected people (no relationships at all) ---
-    var allPeople = ftGetPeople() || [];
+    // Skip when using allowedSet (direct family filter — only show relevant people)
     var extraClusters = [];
-    for(var i=0;i<allPeople.length;i++) {
-        if(!rendered[allPeople[i].id]) {
-            rendered[allPeople[i].id] = true;
-            genMap[allPeople[i].id] = 0;
-            extraClusters.push({parents: [allPeople[i].id], children: []});
+    if(!allowedSet) {
+        var allPeople = ftGetPeople() || [];
+        for(var i=0;i<allPeople.length;i++) {
+            if(!rendered[allPeople[i].id]) {
+                rendered[allPeople[i].id] = true;
+                genMap[allPeople[i].id] = 0;
+                extraClusters.push({parents: [allPeople[i].id], children: []});
+            }
         }
     }
 
@@ -4034,8 +4095,8 @@ function ftPositionCluster(cluster, centerX, y, coords, partnerMap) {
 }
 
 // Master layout orchestrator
-function ftCalcTreeLayout(personId) {
-    var data = ftBuildClusters(personId);
+function ftCalcTreeLayout(personId, allowedSet) {
+    var data = ftBuildClusters(personId, allowedSet);
     if(!data.root) return null;
 
     ftCalcClusterWidth(data.root, data.partnerMap);
